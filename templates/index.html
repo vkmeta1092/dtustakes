@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome | dtuSTAKES{% endblock %}
+
+{% block content %}
+<section class="grid lg:grid-cols-2 gap-8 items-center py-10">
+    <div>
+        <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            No real money • 100 credits on signup
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+            A modern DTU-style <span class="text-cyan-400">Matka simulation</span><br>
+            with provably fair PIN draws
+        </h1>
+
+        <p class="mt-5 text-lg muted max-w-xl">
+            dtuSTAKES is a credit-based betting experience for students, with clean design,
+            single and jodi betting, bet history, and transparent draw verification.
+        </p>
+
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass rounded-2xl p-4">
+                <div class="text-2xl font-bold text-cyan-300">100</div>
+                <div class="text-sm muted mt-1">Starting credits</div>
+            </div>
+
+            <div class="glass rounded-2xl p-4">
+                <div class="text-2xl font-bold text-violet-300">PIN</div>
+                <div class="text-sm muted mt-1">Provably fair draw method</div>
+            </div>
+
+            <div class="glass rounded-2xl p-4">
+                <div class="text-2xl font-bold text-emerald-300">DTU</div>
+                <div class="text-sm muted mt-1">Campus-themed identity</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-strong rounded-3xl p-6 sm:p-8 shadow-soft">
+        {% if error %}
+        <div class="mb-5 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-red-300">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center text-white font-bold">
+                        +
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">Create Account</h2>
+                        <p class="text-sm muted">Get started with 100 free credits</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="/signup" class="space-y-4">
+                    <div>
+                        <label class="block text-sm muted mb-2">DTU Roll Number</label>
+                        <input
+                            name="roll_no"
+                            required
+                            class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40"
+                            placeholder="25/BXX/XXX"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm muted mb-2">Email</label>
+                        <input
+                            name="email"
+                            type="email"
+                            required
+                            class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40"
+                            placeholder="you@dtu.ac.in"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm muted mb-2">Password</label>
+                        <input
+                            name="password"
+                            type="password"
+                            required
+                            class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40"
+                            placeholder="Enter password"
+                        >
+                    </div>
+
+                    <button type="submit" class="brand-btn w-full rounded-2xl py-3 font-semibold">
+                        Sign Up & Get 100 Credits
+                    </button>
+                </form>
+            </div>
+
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-white font-bold">
+                        →
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">Already registered?</h2>
+                        <p class="text-sm muted">Login to continue betting</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="/login" class="space-y-4">
+                    <div>
+                        <label class="block text-sm muted mb-2">Email</label>
+                        <input
+                            name="email"
+                            type="email"
+                            required
+                            class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-violet-400/40"
+                            placeholder="you@dtu.ac.in"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm muted mb-2">Password</label>
+                        <input
+                            name="password"
+                            type="password"
+                            required
+                            class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-violet-400/40"
+                            placeholder="Enter password"
+                        >
+                    </div>
+
+                    <button type="submit" class="outline-btn w-full rounded-2xl py-3 font-semibold">
+                        Login
+                    </button>
+
+                    <div class="text-center pt-1">
+                        <a href="/forgot-password" class="text-sm text-cyan-300 hover:underline">
+                            Forgot Password?
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

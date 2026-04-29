@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Draw | dtuSTAKES{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto">
+    <div class="glass-strong rounded-3xl p-6 sm:p-8">
+        <div class="mb-8">
+            <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-4">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                Transparent result verification
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold">Verify a draw manually</h1>
+            <p class="text-muted mt-3 max-w-2xl">
+                Enter the server seed, PIN, and nonce used in the round. This page helps users understand how the result was generated from the provably fair draw method.
+            </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+                <label class="block text-sm text-muted mb-2">Server Seed</label>
+                <input id="serverSeed" type="text" placeholder="Paste revealed server seed" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm text-muted mb-2">PIN</label>
+                <input id="verifyPin" type="text" placeholder="Example: 1234" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm text-muted mb-2">Nonce</label>
+                <input id="verifyNonce" type="number" placeholder="Example: 845" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+            </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+            <button onclick="verifyLocally()" class="brand-button rounded-2xl px-6 py-3 font-semibold">
+                Verify Result
+            </button>
+        </div>
+
+        <div id="verifyCard" class="hidden mt-8 rounded-3xl border border-emerald-400/20 bg-emerald-500/10 p-6">
+            <div class="text-sm text-emerald-200">Computed Output</div>
+
+            <div class="grid sm:grid-cols-2 gap-4 mt-4">
+                <div class="glass rounded-2xl p-4">
+                    <div class="text-xs text-muted">Open Digit</div>
+                    <div id="verifyOpen" class="text-3xl font-bold mt-1">-</div>
+                </div>
+
+                <div class="glass rounded-2xl p-4">
+                    <div class="text-xs text-muted">Jodi</div>
+                    <div id="verifyJodi" class="text-3xl font-bold mt-1">-</div>
+                </div>
+            </div>
+
+            <div class="mt-5 text-sm text-muted">
+                This browser-side verifier is for transparency and demonstration. It should match the draw logic used in your Flask backend.
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function hmacSHA256(message, key) {
+        const enc = new TextEncoder();
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw',
+            enc.encode(key),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+        const signature = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+        const bytes = Array.from(new Uint8Array(signature));
+        return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function computeDigit(serverSeed, pin, nonce) {
+        const hashHex = await hmacSHA256(`${pin}:${nonce}`, serverSeed);
+        const first8 = hashHex.slice(0, 8);
+        return parseInt(first8, 16) % 10;
+    }
+
+    async function verifyLocally() {
+        const serverSeed = document.getElementById('serverSeed').value.trim();
+        const pin = document.getElementById('verifyPin').value.trim();
+        const nonce = document.getElementById('verifyNonce').value.trim();
+
+        if (!serverSeed || !pin || !nonce) {
+            alert('Please fill all fields.');
+            return;
+        }
+
+        const d1 = await computeDigit(serverSeed, pin, nonce);
+        const d2 = await computeDigit(serverSeed, String(parseInt(pin) + 1), nonce);
+
+        document.getElementById('verifyCard').classList.remove('hidden');
+        document.getElementById('verifyOpen').textContent = d1;
+        document.getElementById('verifyJodi').textContent = `${d1}-${d2}`;
+    }
+</script>
+{% endblock %}

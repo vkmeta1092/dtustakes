@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Analytics | dtuSTAKES{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div>
+            <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-4">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                Internal analytics panel
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold">dtuSTAKES Admin Dashboard</h1>
+            <p class="text-muted mt-3 max-w-3xl">
+                Track visitors, signups, betting activity, virtual credit flow, popular pages, and top users from one admin panel.
+            </p>
+        </div>
+
+        <div class="glass rounded-3xl px-5 py-4">
+            <div class="text-sm text-muted">Platform Net Credits</div>
+            <div class="text-3xl font-bold mt-1">{{ kpis.net_platform }}</div>
+        </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div class="glass-strong rounded-3xl p-5">
+            <div class="text-sm text-muted">Total Visitors</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.total_visitors }}</div>
+            <div class="text-xs text-cyan-300 mt-2">Tracked browser sessions</div>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-5">
+            <div class="text-sm text-muted">Signups</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.unique_signups }}</div>
+            <div class="text-xs text-emerald-300 mt-2">Registered users</div>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-5">
+            <div class="text-sm text-muted">Total Bets</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.total_bets }}</div>
+            <div class="text-xs text-violet-300 mt-2">Placed across all rounds</div>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-5">
+            <div class="text-sm text-muted">Page Views</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.total_page_views }}</div>
+            <div class="text-xs text-orange-300 mt-2">All tracked pages</div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+            <div class="text-sm text-muted">Credits Wagered</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.credits_wagered }}</div>
+            <div class="text-xs text-cyan-300 mt-2">Total virtual credits in</div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+            <div class="text-sm text-muted">Credits Paid Out</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.credits_paid_out }}</div>
+            <div class="text-xs text-rose-300 mt-2">Total user winnings</div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+            <div class="text-sm text-muted">Reveals</div>
+            <div class="text-3xl font-bold mt-2">{{ kpis.total_reveals }}</div>
+            <div class="text-xs text-emerald-300 mt-2">Result reveals completed</div>
+        </div>
+
+        <div class="glass rounded-3xl p-5">
+            <div class="text-sm text-muted">House Balance</div>
+            <div class="text-3xl font-bold mt-2 {% if kpis.net_platform >= 0 %}text-emerald-300{% else %}text-red-300{% endif %}">
+                {{ kpis.net_platform }}
+            </div>
+            <div class="text-xs text-muted mt-2">Wagered minus paid out</div>
+        </div>
+    </div>
+
+    <div class="grid xl:grid-cols-2 gap-6">
+        <div class="glass-strong rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Traffic & Bets</h2>
+                    <p class="text-sm text-muted mt-1">Last 7 days visitors and bets placed.</p>
+                </div>
+            </div>
+            <div class="h-[340px]">
+                <canvas id="visitsBetsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Credit Flow</h2>
+                    <p class="text-sm text-muted mt-1">Credits wagered vs payouts over 7 days.</p>
+                </div>
+            </div>
+            <div class="h-[340px]">
+                <canvas id="creditsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid xl:grid-cols-2 gap-6">
+        <div class="glass-strong rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-2xl font-bold">Top Pages</h2>
+                    <p class="text-sm text-muted mt-1">Most visited routes on the platform.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-white/10">
+                <table class="w-full text-left min-w-[520px]">
+                    <thead class="bg-white/5">
+                        <tr class="text-sm text-muted">
+                            <th class="px-4 py-3">Page</th>
+                            <th class="px-4 py-3">Hits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if top_pages %}
+                            {% for row in top_pages %}
+                            <tr class="border-t border-white/10">
+                                <td class="px-4 py-3 font-medium">{{ row.page }}</td>
+                                <td class="px-4 py-3">{{ row.hits }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="2" class="px-4 py-8 text-center text-muted">No page analytics yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-2xl font-bold">Top Players</h2>
+                    <p class="text-sm text-muted mt-1">Ranked by total winnings.</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-white/10">
+                <table class="w-full text-left min-w-[720px]">
+                    <thead class="bg-white/5">
+                        <tr class="text-sm text-muted">
+                            <th class="px-4 py-3">Roll No</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Credits</th>
+                            <th class="px-4 py-3">Total Bet</th>
+                            <th class="px-4 py-3">Total Won</th>
+                            <th class="px-4 py-3">Bets</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if top_players %}
+                            {% for player in top_players %}
+                            <tr class="border-t border-white/10">
+                                <td class="px-4 py-3 font-medium">{{ player.roll_no }}</td>
+                                <td class="px-4 py-3">{{ player.email }}</td>
+                                <td class="px-4 py-3">{{ player.credits }}</td>
+                                <td class="px-4 py-3">{{ player.total_bet }}</td>
+                                <td class="px-4 py-3 text-emerald-300">{{ player.total_won }}</td>
+                                <td class="px-4 py-3">{{ player.bets_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-muted">No players available yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = {{ chart_data.labels | tojson }};
+    const visits = {{ chart_data.visits | tojson }};
+    const bets = {{ chart_data.bets | tojson }};
+    const creditsIn = {{ chart_data.credits_in | tojson }};
+    const creditsOut = {{ chart_data.credits_out | tojson }};
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#cbd5e1'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: '#94a3b8' },
+                grid: { color: 'rgba(148, 163, 184, 0.08)' }
+            },
+            y: {
+                ticks: { color: '#94a3b8' },
+                grid: { color: 'rgba(148, 163, 184, 0.08)' }
+            }
+        }
+    };
+
+    const visitsCtx = document.getElementById('visitsBetsChart');
+    if (visitsCtx) {
+        new Chart(visitsCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Visitors',
+                        data: visits,
+                        borderColor: '#22d3ee',
+                        backgroundColor: 'rgba(34, 211, 238, 0.15)',
+                        fill: true,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Bets',
+                        data: bets,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                        fill: true,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: commonOptions
+        });
+    }
+
+    const creditsCtx = document.getElementById('creditsChart');
+    if (creditsCtx) {
+        new Chart(creditsCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Credits In',
+                        data: creditsIn,
+                        backgroundColor: 'rgba(34, 211, 238, 0.75)',
+                        borderRadius: 10
+                    },
+                    {
+                        label: 'Credits Out',
+                        data: creditsOut,
+                        backgroundColor: 'rgba(244, 63, 94, 0.75)',
+                        borderRadius: 10
+                    }
+                ]
+            },
+            options: commonOptions
+        });
+    }
+</script>
+{% endblock %}

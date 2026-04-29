@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}dtuSTAKES{% endblock %}</title>
+
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Satoshi', 'sans-serif']
+                    },
+                    boxShadow: {
+                        soft: '0 10px 30px rgba(0,0,0,0.18)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-1: #020617;
+            --bg-2: #0f172a;
+            --card: rgba(15, 23, 42, 0.60);
+            --card-strong: rgba(15, 23, 42, 0.82);
+            --border: rgba(148, 163, 184, 0.20);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #22d3ee;
+            --accent-2: #8b5cf6;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        [data-theme="light"] {
+            --bg-1: #eff6ff;
+            --bg-2: #dbeafe;
+            --card: rgba(255, 255, 255, 0.72);
+            --card-strong: rgba(255, 255, 255, 0.94);
+            --border: rgba(15, 23, 42, 0.10);
+            --text: #0f172a;
+            --muted: #475569;
+            --accent: #0891b2;
+            --accent-2: #7c3aed;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Satoshi', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 10%, rgba(34,211,238,0.18), transparent 22%),
+                radial-gradient(circle at 90% 8%, rgba(139,92,246,0.18), transparent 24%),
+                linear-gradient(135deg, var(--bg-1), var(--bg-2));
+        }
+
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(18px);
+        }
+
+        .glass-strong {
+            background: var(--card-strong);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(24px);
+        }
+
+        .text-muted {
+            color: var(--muted);
+        }
+
+        .brand-gradient {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        }
+
+        .brand-button {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white;
+            transition: all 0.25s ease;
+        }
+
+        .brand-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(34, 211, 238, 0.20);
+        }
+
+        .secondary-button {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            transition: all 0.25s ease;
+        }
+
+        .secondary-button:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .table-wrap table {
+            min-width: 760px;
+        }
+
+        input, select {
+            color: var(--text);
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="min-h-screen">
+        <nav class="sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+                <a href="/" class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl brand-gradient flex items-center justify-center text-white font-extrabold text-lg shadow-soft">
+                        D
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold leading-none">dtuSTAKES</div>
+                        <div class="text-xs text-muted mt-1">DTU credit-only betting simulation</div>
+                    </div>
+                </a>
+
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <button id="themeToggle" type="button" class="secondary-button rounded-xl px-4 py-2 text-sm">
+                        Toggle Theme
+                    </button>
+
+                    {% if session.get('user_id') %}
+                        <a href="/dashboard" class="secondary-button rounded-xl px-4 py-2 text-sm">Dashboard</a>
+                        <a href="/verify" class="secondary-button rounded-xl px-4 py-2 text-sm">Verify Draw</a>
+                        <a href="/logout" class="brand-button rounded-xl px-4 py-2 text-sm font-semibold">Logout</a>
+                    {% else %}
+                        <a href="/" class="secondary-button rounded-xl px-4 py-2 text-sm">Home</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        const htmlEl = document.documentElement;
+        const themeBtn = document.getElementById('themeToggle');
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const current = htmlEl.getAttribute('data-theme') || 'dark';
+                htmlEl.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+            });
+        }
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
