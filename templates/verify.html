@@ -1,105 +1,187 @@
 {% extends "base.html" %}
-
 {% block title %}Verify Draw | dtuSTAKES{% endblock %}
 
 {% block content %}
-<section class="max-w-4xl mx-auto">
-    <div class="glass-strong rounded-3xl p-6 sm:p-8">
-        <div class="mb-8">
-            <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-sm mb-4">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                Transparent result verification
-            </div>
-            <h1 class="text-3xl sm:text-4xl font-bold">Verify a draw manually</h1>
-            <p class="text-muted mt-3 max-w-2xl">
-                Enter the server seed, PIN, and nonce used in the round. This page helps users understand how the result was generated from the provably fair draw method.
-            </p>
-        </div>
+<section class="max-w-2xl mx-auto space-y-8">
 
-        <div class="grid sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2">
-                <label class="block text-sm text-muted mb-2">Server Seed</label>
-                <input id="serverSeed" type="text" placeholder="Paste revealed server seed" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            </div>
+  <div class="glass-strong rounded-3xl p-8">
+    <h1 class="text-3xl font-bold mb-2">🔍 Verify a Draw</h1>
+    <p class="muted mb-6">
+      Enter any Draw ID to independently verify the result was not rigged.
+      The server commits to a <strong class="text-white">SHA-256 hash</strong> of the seed
+      <em>before</em> bets are placed. After reveal, you can confirm the hash matches the seed.
+    </p>
 
-            <div>
-                <label class="block text-sm text-muted mb-2">PIN</label>
-                <input id="verifyPin" type="text" placeholder="Example: 1234" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            </div>
-
-            <div>
-                <label class="block text-sm text-muted mb-2">Nonce</label>
-                <input id="verifyNonce" type="number" placeholder="Example: 845" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            </div>
-        </div>
-
-        <div class="mt-5 flex flex-wrap gap-3">
-            <button onclick="verifyLocally()" class="brand-button rounded-2xl px-6 py-3 font-semibold">
-                Verify Result
-            </button>
-        </div>
-
-        <div id="verifyCard" class="hidden mt-8 rounded-3xl border border-emerald-400/20 bg-emerald-500/10 p-6">
-            <div class="text-sm text-emerald-200">Computed Output</div>
-
-            <div class="grid sm:grid-cols-2 gap-4 mt-4">
-                <div class="glass rounded-2xl p-4">
-                    <div class="text-xs text-muted">Open Digit</div>
-                    <div id="verifyOpen" class="text-3xl font-bold mt-1">-</div>
-                </div>
-
-                <div class="glass rounded-2xl p-4">
-                    <div class="text-xs text-muted">Jodi</div>
-                    <div id="verifyJodi" class="text-3xl font-bold mt-1">-</div>
-                </div>
-            </div>
-
-            <div class="mt-5 text-sm text-muted">
-                This browser-side verifier is for transparency and demonstration. It should match the draw logic used in your Flask backend.
-            </div>
-        </div>
+    <label class="block text-sm muted mb-2">Draw ID</label>
+    <div class="flex gap-3">
+      <input id="verifyId" type="number" min="1" placeholder="e.g. 8"
+        class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40 font-mono text-2xl text-center font-bold text-cyan-300">
+      <button onclick="verifyDraw()" class="brand-btn rounded-2xl px-6 py-3 font-semibold">
+        Verify
+      </button>
     </div>
+    <div id="verifyError" class="mt-3 text-sm text-red-300 hidden"></div>
+  </div>
+
+  <!-- Result Card -->
+  <div id="verifyResult" class="hidden space-y-4">
+
+    <!-- Hash Check -->
+    <div id="hashBanner" class="rounded-3xl p-5 flex items-center gap-4">
+      <div id="hashIcon" class="text-5xl"></div>
+      <div>
+        <div id="hashTitle" class="text-xl font-bold"></div>
+        <div id="hashSub" class="text-sm muted mt-1"></div>
+      </div>
+    </div>
+
+    <!-- Draw Details -->
+    <div class="glass rounded-3xl p-6 space-y-5">
+      <h2 class="text-xl font-bold">Draw Details</h2>
+
+      <div class="grid sm:grid-cols-3 gap-4 text-center">
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs muted uppercase tracking-wider mb-1">Draw ID</div>
+          <div class="text-3xl font-black text-cyan-300" id="vDrawId">—</div>
+        </div>
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs muted uppercase tracking-wider mb-1">Open Digit</div>
+          <div class="text-3xl font-black text-emerald-300" id="vOpenDigit">—</div>
+        </div>
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs muted uppercase tracking-wider mb-1">Close Digit</div>
+          <div class="text-3xl font-black text-rose-300" id="vCloseDigit">—</div>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4 text-center">
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs muted uppercase tracking-wider mb-2">Open Patti</div>
+          <div class="text-2xl font-bold tracking-widest" id="vOpenPatti">—</div>
+          <div class="text-xs muted mt-1">Sum → last digit = open result</div>
+        </div>
+        <div class="glass rounded-2xl p-4">
+          <div class="text-xs muted uppercase tracking-wider mb-2">Close Patti</div>
+          <div class="text-2xl font-bold tracking-widest" id="vClosePatti">—</div>
+          <div class="text-xs muted mt-1">Sum → last digit = close result</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 text-center">
+        <div class="text-xs muted uppercase tracking-wider mb-1">Jodi</div>
+        <div class="text-5xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent" id="vJodi">—</div>
+      </div>
+    </div>
+
+    <!-- Seed Verification -->
+    <div class="glass rounded-3xl p-6 space-y-4">
+      <h2 class="text-xl font-bold">Provably Fair Proof</h2>
+      <div>
+        <div class="text-xs muted uppercase tracking-wider mb-1">Server Seed (revealed after draw)</div>
+        <div class="font-mono text-xs break-all bg-white/5 rounded-xl px-4 py-3 text-cyan-200" id="vSeed">—</div>
+      </div>
+      <div>
+        <div class="text-xs muted uppercase tracking-wider mb-1">SHA-256 of Seed (committed before draw)</div>
+        <div class="font-mono text-xs break-all bg-white/5 rounded-xl px-4 py-3 text-violet-200" id="vHash">—</div>
+      </div>
+      <div>
+        <div class="text-xs muted uppercase tracking-wider mb-1">Recomputed Hash (you can verify independently)</div>
+        <div class="font-mono text-xs break-all bg-white/5 rounded-xl px-4 py-3 text-slate-300" id="vRecomputed">—</div>
+      </div>
+      <div class="text-xs muted pt-2">
+        Nonce: <span class="text-white font-semibold" id="vNonce">—</span>
+        &nbsp;|&nbsp; Timestamp: <span class="text-white font-semibold" id="vTimestamp">—</span>
+      </div>
+    </div>
+
+    <!-- How to verify manually -->
+    <div class="glass rounded-3xl p-6">
+      <h2 class="text-xl font-bold mb-3">Verify Yourself (Python)</h2>
+      <pre id="verifyCode" class="bg-black/40 rounded-2xl p-4 text-xs text-emerald-300 overflow-x-auto whitespace-pre-wrap break-all"></pre>
+    </div>
+
+  </div>
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    async function hmacSHA256(message, key) {
-        const enc = new TextEncoder();
-        const cryptoKey = await crypto.subtle.importKey(
-            'raw',
-            enc.encode(key),
-            { name: 'HMAC', hash: 'SHA-256' },
-            false,
-            ['sign']
-        );
-        const signature = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
-        const bytes = Array.from(new Uint8Array(signature));
-        return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+async function verifyDraw() {
+  const drawId = document.getElementById('verifyId').value.trim();
+  const errDiv = document.getElementById('verifyError');
+  errDiv.classList.add('hidden');
+
+  if (!drawId) { errDiv.textContent = 'Please enter a Draw ID.'; errDiv.classList.remove('hidden'); return; }
+
+  try {
+    const res  = await fetch('/api/verify-draw', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ draw_id: drawId })
+    });
+    const d = await res.json();
+
+    if (d.error) { errDiv.textContent = d.error; errDiv.classList.remove('hidden'); return; }
+
+    document.getElementById('verifyResult').classList.remove('hidden');
+
+    // Hash banner
+    const banner = document.getElementById('hashBanner');
+    if (d.hash_matches) {
+      banner.className = 'rounded-3xl p-5 flex items-center gap-4 bg-emerald-500/10 border border-emerald-400/30';
+      document.getElementById('hashIcon').textContent  = '✅';
+      document.getElementById('hashTitle').textContent = 'Hash Verified — Draw is Provably Fair';
+      document.getElementById('hashSub').textContent   = 'SHA-256(server_seed) matches the committed hash. The result was not altered.';
+    } else {
+      banner.className = 'rounded-3xl p-5 flex items-center gap-4 bg-red-500/10 border border-red-400/30';
+      document.getElementById('hashIcon').textContent  = '❌';
+      document.getElementById('hashTitle').textContent = 'Hash Mismatch — Something is wrong';
+      document.getElementById('hashSub').textContent   = 'The recomputed hash does not match. The seed may have been tampered with.';
     }
 
-    async function computeDigit(serverSeed, pin, nonce) {
-        const hashHex = await hmacSHA256(`${pin}:${nonce}`, serverSeed);
-        const first8 = hashHex.slice(0, 8);
-        return parseInt(first8, 16) % 10;
-    }
+    document.getElementById('vDrawId').textContent    = '#' + d.draw_id;
+    document.getElementById('vOpenDigit').textContent = d.open_digit;
+    document.getElementById('vCloseDigit').textContent= d.close_digit;
+    document.getElementById('vOpenPatti').textContent = d.open_patti.split('-').join(' · ');
+    document.getElementById('vClosePatti').textContent= d.close_patti.split('-').join(' · ');
+    document.getElementById('vJodi').textContent      = d.jodi;
+    document.getElementById('vSeed').textContent      = d.server_seed;
+    document.getElementById('vHash').textContent      = d.hashed_seed;
+    document.getElementById('vRecomputed').textContent= d.recomputed_hash;
+    document.getElementById('vNonce').textContent     = d.nonce;
+    document.getElementById('vTimestamp').textContent = d.timestamp;
 
-    async function verifyLocally() {
-        const serverSeed = document.getElementById('serverSeed').value.trim();
-        const pin = document.getElementById('verifyPin').value.trim();
-        const nonce = document.getElementById('verifyNonce').value.trim();
+    document.getElementById('verifyCode').textContent =
+`import hashlib, hmac
 
-        if (!serverSeed || !pin || !nonce) {
-            alert('Please fill all fields.');
-            return;
-        }
+server_seed = "${d.server_seed}"
+committed_hash = "${d.hashed_seed}"
 
-        const d1 = await computeDigit(serverSeed, pin, nonce);
-        const d2 = await computeDigit(serverSeed, String(parseInt(pin) + 1), nonce);
+# Step 1: Verify hash
+assert hashlib.sha256(server_seed.encode()).hexdigest() == committed_hash, "TAMPERED!"
+print("Hash OK ✅")
 
-        document.getElementById('verifyCard').classList.remove('hidden');
-        document.getElementById('verifyOpen').textContent = d1;
-        document.getElementById('verifyJodi').textContent = `${d1}-${d2}`;
-    }
+# Step 2: Recompute open patti
+def patti(seed, salt, nonce):
+    digits = []
+    for i in range(3):
+        msg = f"{salt}:{nonce}:{i}".encode()
+        d = hmac.new(seed.encode(), msg, hashlib.sha256).hexdigest()
+        digits.append(int(d[:8], 16) % 10)
+    return digits
+
+nonce = ${d.nonce}
+open_d  = patti(server_seed, "${d.draw_id}", nonce)
+close_d = patti(server_seed, str(${d.draw_id} + 1), nonce)
+
+print("Open patti:", open_d, "→ digit:", sum(open_d) % 10)
+print("Close patti:", close_d, "→ digit:", sum(close_d) % 10)
+print("Jodi:", str(sum(open_d)%10) + str(sum(close_d)%10))`;
+
+  } catch {
+    errDiv.textContent = 'Verification failed. Try again.';
+    errDiv.classList.remove('hidden');
+  }
+}
 </script>
 {% endblock %}

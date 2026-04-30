@@ -1,277 +1,412 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard | dtuSTAKES{% endblock %}
 
 {% block content %}
 <section class="space-y-8">
-    <div class="grid lg:grid-cols-3 gap-6">
-        <div class="glass-strong rounded-3xl p-6 lg:col-span-2">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <div class="text-sm text-muted">Welcome back</div>
-                    <h1 class="text-3xl font-bold mt-1">{{ user.roll_no }}</h1>
-                    <p class="text-muted mt-2">Use credits to place single or jodi bets. Reveal the result using your chosen PIN.</p>
-                </div>
-                <div class="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 px-6 py-4">
-                    <div class="text-sm text-cyan-200">Available Credits</div>
-                    <div class="text-4xl font-bold mt-1">{{ user.credits }}</div>
-                </div>
-            </div>
-        </div>
 
-        <div class="glass rounded-3xl p-6">
-            <div class="text-sm text-muted">Current Draw</div>
-            <div class="mt-3 space-y-3">
-                <div>
-                    <div class="text-xs uppercase tracking-wider text-muted">Hash</div>
-                    <div class="text-sm break-all mt-1">{{ hashed }}</div>
-                </div>
-                <div>
-                    <div class="text-xs uppercase tracking-wider text-muted">Nonce</div>
-                    <div class="text-lg font-semibold mt-1">{{ nonce }}</div>
-                </div>
-                <div>
-                    <div class="text-xs uppercase tracking-wider text-muted">Draw ID</div>
-                    <div class="text-lg font-semibold mt-1">{{ draw.id }}</div>
-                </div>
-            </div>
+  <!-- Header Row -->
+  <div class="grid lg:grid-cols-3 gap-6">
+    <div class="glass-strong rounded-3xl p-6 lg:col-span-2">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="text-sm muted">Welcome back</div>
+          <h1 class="text-3xl font-bold mt-1">{{ user.roll_no }}</h1>
+          <p class="muted mt-2">Pick up to 3 numbers • Single, Jodi, Open or Close</p>
         </div>
+        <div class="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 px-6 py-4 text-center">
+          <div class="text-sm text-cyan-200">Available Credits</div>
+          <div class="text-4xl font-bold mt-1" id="liveCredits">{{ user.credits }}</div>
+        </div>
+      </div>
     </div>
-
-    <div class="grid xl:grid-cols-2 gap-6">
-        <div class="glass-strong rounded-3xl p-6">
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="text-2xl font-bold">Place Bet</h2>
-                <span class="text-xs px-3 py-1 rounded-full bg-violet-500/15 text-violet-200 border border-violet-400/20">
-                    Live round
-                </span>
-            </div>
-
-            <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm text-muted mb-2">Bet Type</label>
-                    <select id="betType" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-                        <option value="single">Single</option>
-                        <option value="jodi">Jodi</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm text-muted mb-2">Amount</label>
-                    <input id="betAmount" type="number" min="1" value="10" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <label class="block text-sm text-muted mb-2">Your Pick</label>
-                <input id="betPick" type="text" placeholder="Single: 5 or Jodi: 5-7" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            </div>
-
-            <div class="mt-5 flex flex-wrap gap-3">
-                <button onclick="placeBet()" class="brand-button rounded-2xl px-6 py-3 font-semibold">
-                    Place Bet
-                </button>
-                <button onclick="loadHistory()" class="secondary-button rounded-2xl px-6 py-3 font-semibold">
-                    Refresh History
-                </button>
-            </div>
-
-            <div id="betMessage" class="mt-5 text-sm"></div>
+    <div class="glass rounded-3xl p-6">
+      <div class="text-sm muted mb-3">Current Draw</div>
+      <div class="space-y-3">
+        <div>
+          <div class="text-xs uppercase tracking-wider muted">Hash</div>
+          <div class="text-xs break-all mt-1 text-cyan-300 font-mono">{{ hashed }}</div>
         </div>
-
-        <div class="glass rounded-3xl p-6">
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="text-2xl font-bold">Reveal Draw</h2>
-                <span class="text-xs px-3 py-1 rounded-full bg-cyan-400/15 text-cyan-200 border border-cyan-400/20">
-                    PIN method
-                </span>
-            </div>
-
-            <div>
-                <label class="block text-sm text-muted mb-2">PIN</label>
-                <input id="drawPin" type="text" placeholder="Enter 4-digit PIN" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            </div>
-
-            <div class="mt-5 flex flex-wrap gap-3">
-                <button onclick="revealDraw()" class="brand-button rounded-2xl px-6 py-3 font-semibold">
-                    Reveal Result
-                </button>
-            </div>
-
-            <div id="drawResult" class="mt-6 hidden rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-                <div class="text-sm text-emerald-200">Revealed Result</div>
-                <div class="mt-3 grid sm:grid-cols-3 gap-4">
-                    <div class="glass rounded-2xl p-4">
-                        <div class="text-xs text-muted">Open Digit</div>
-                        <div id="resultOpen" class="text-3xl font-bold mt-1">-</div>
-                    </div>
-                    <div class="glass rounded-2xl p-4">
-                        <div class="text-xs text-muted">Jodi</div>
-                        <div id="resultJodi" class="text-3xl font-bold mt-1">-</div>
-                    </div>
-                    <div class="glass rounded-2xl p-4">
-                        <div class="text-xs text-muted">Seed</div>
-                        <div id="resultSeed" class="text-xs break-all mt-2">-</div>
-                    </div>
-                </div>
-            </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-wider muted">Nonce</div>
+            <div class="text-lg font-semibold mt-1">{{ nonce }}</div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wider muted">Draw ID</div>
+            <div class="text-lg font-semibold mt-1">#{{ draw.id }}</div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
+  <!-- Matka Cards -->
+  <div class="glass-strong rounded-3xl p-8">
+    <h2 class="text-2xl font-bold mb-2 text-center">🎴 Matka Draw</h2>
+    <p class="text-center muted text-sm mb-8">Three open + three close numbers are drawn. Sum's last digit = result.</p>
+    <div class="grid md:grid-cols-2 gap-10">
+      <!-- Open Side -->
+      <div class="text-center">
+        <div class="text-emerald-300 font-bold text-lg mb-4">Open Side</div>
+        <div class="flex justify-center gap-4 mb-4">
+          <div class="matka-card card-open" id="openCard0">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="openNum0">?</div>
+            </div>
+          </div>
+          <div class="matka-card card-open" id="openCard1">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="openNum1">?</div>
+            </div>
+          </div>
+          <div class="matka-card card-open" id="openCard2">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="openNum2">?</div>
+            </div>
+          </div>
+        </div>
+        <div class="text-4xl font-black text-cyan-300" id="openResult">—</div>
+        <div class="text-xs muted mt-1">Open Digit</div>
+      </div>
+      <!-- Close Side -->
+      <div class="text-center">
+        <div class="text-rose-300 font-bold text-lg mb-4">Close Side</div>
+        <div class="flex justify-center gap-4 mb-4">
+          <div class="matka-card card-close" id="closeCard0">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="closeNum0">?</div>
+            </div>
+          </div>
+          <div class="matka-card card-close" id="closeCard1">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="closeNum1">?</div>
+            </div>
+          </div>
+          <div class="matka-card card-close" id="closeCard2">
+            <div class="matka-card-inner">
+              <div class="matka-card-front">?</div>
+              <div class="matka-card-back" id="closeNum2">?</div>
+            </div>
+          </div>
+        </div>
+        <div class="text-4xl font-black text-rose-300" id="closeResult">—</div>
+        <div class="text-xs muted mt-1">Close Digit</div>
+      </div>
+    </div>
+    <!-- Jodi Result -->
+    <div class="text-center mt-8 hidden" id="jodiRevealRow">
+      <div class="text-sm muted mb-1">Jodi (Open+Close)</div>
+      <div class="text-6xl font-black bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent" id="jodiResult">—</div>
+    </div>
+    <!-- Seed -->
+    <div class="text-center mt-4 hidden" id="seedRow">
+      <div class="text-xs muted">Revealed Server Seed</div>
+      <div class="text-xs font-mono text-slate-400 break-all mt-1" id="revealedSeed"></div>
+    </div>
+  </div>
+
+  <!-- Bet + Reveal Grid -->
+  <div class="grid xl:grid-cols-2 gap-6">
+
+    <!-- Place Bet -->
     <div class="glass-strong rounded-3xl p-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-            <div>
-                <h2 class="text-2xl font-bold">Bet History</h2>
-                <p class="text-sm text-muted mt-1">Latest bets, results, and payouts for your account.</p>
-            </div>
-            <div class="text-sm text-muted">
-                Single payout: 9x • Jodi payout: 90x
-            </div>
-        </div>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-2xl font-bold">Place Bet</h2>
+        <span class="text-xs px-3 py-1 rounded-full bg-violet-500/15 text-violet-200 border border-violet-400/20">Live round</span>
+      </div>
 
-        <div class="table-wrap rounded-2xl border border-white/10">
-            <table class="w-full text-left">
-                <thead class="bg-white/5">
-                    <tr class="text-sm text-muted">
-                        <th class="px-4 py-3">Bet ID</th>
-                        <th class="px-4 py-3">Type</th>
-                        <th class="px-4 py-3">Pick</th>
-                        <th class="px-4 py-3">Amount</th>
-                        <th class="px-4 py-3">Won</th>
-                        <th class="px-4 py-3">Result</th>
-                        <th class="px-4 py-3">Time</th>
-                    </tr>
-                </thead>
-                <tbody id="historyBody">
-                    {% if bets %}
-                        {% for bet in bets %}
-                        <tr class="border-t border-white/10">
-                            <td class="px-4 py-3">{{ bet.id }}</td>
-                            <td class="px-4 py-3">{{ bet.type }}</td>
-                            <td class="px-4 py-3">{{ bet.pick }}</td>
-                            <td class="px-4 py-3">{{ bet.amount }}</td>
-                            <td class="px-4 py-3">{{ bet.won }}</td>
-                            <td class="px-4 py-3">{{ bet.result }}/{{ bet.jodi }}</td>
-                            <td class="px-4 py-3">{{ bet.time }}</td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-muted">No bets yet.</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+      <!-- Number Picker -->
+      <div class="mb-5">
+        <label class="block text-sm muted mb-3">Pick up to 3 numbers (0–9)</label>
+        <div class="flex flex-wrap gap-2" id="numPicker">
+          {% for n in range(10) %}
+          <button type="button" class="num-btn" data-num="{{ n }}" onclick="toggleNum(this)">{{ n }}</button>
+          {% endfor %}
         </div>
+        <div class="mt-2 text-xs muted">Selected: <span id="pickedNums" class="text-cyan-300 font-semibold">none</span> → Result digit: <span id="pickedResult" class="text-violet-300 font-bold">—</span></div>
+      </div>
+
+      <!-- Bet Type -->
+      <div class="grid sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm muted mb-2">Bet Type</label>
+          <select id="betType" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-violet-400/40">
+            <option value="open">Open (9×) – match open digit</option>
+            <option value="close">Close (9×) – match close digit</option>
+            <option value="single">Single (9×) – match either digit</option>
+            <option value="jodi">Jodi (90×) – exact 2-digit match</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm muted mb-2">Amount (credits)</label>
+          <input id="betAmount" type="number" min="1" value="10"
+            class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-violet-400/40">
+        </div>
+      </div>
+
+      <!-- Auto-filled pick -->
+      <div class="mb-5">
+        <label class="block text-sm muted mb-2">Your Pick <span class="text-xs">(auto-filled from number picker)</span></label>
+        <input id="betPick" type="text" readonly placeholder="Select numbers above"
+          class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none font-mono text-cyan-300 font-bold">
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button onclick="placeBet()" class="brand-btn rounded-2xl px-6 py-3 font-semibold">Place Bet</button>
+        <button onclick="loadHistory()" class="outline-btn rounded-2xl px-6 py-3 font-semibold">Refresh History</button>
+      </div>
+      <div id="betMessage" class="mt-4 text-sm"></div>
     </div>
+
+    <!-- Reveal Draw -->
+    <div class="glass rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-2xl font-bold">Reveal Draw</h2>
+        <span class="text-xs px-3 py-1 rounded-full bg-cyan-400/15 text-cyan-200 border border-cyan-400/20">PIN method</span>
+      </div>
+      <label class="block text-sm muted mb-2">PIN (4 digits)</label>
+      <input id="drawPin" type="password" maxlength="4" placeholder="Enter your PIN"
+        class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:ring-2 focus:ring-cyan-400/40 font-mono text-2xl text-center tracking-widest mb-5">
+      <button id="revealBtn" onclick="revealDraw()" class="brand-btn w-full rounded-2xl py-4 font-bold text-lg">
+        🔓 Reveal Cards
+      </button>
+      <div class="mt-4 text-xs muted text-center">
+        Single payout <strong class="text-white">9×</strong> &nbsp;|&nbsp; Jodi payout <strong class="text-white">90×</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bet History -->
+  <div class="glass-strong rounded-3xl p-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+      <div>
+        <h2 class="text-2xl font-bold">Bet History</h2>
+        <p class="text-sm muted mt-1">Latest bets, results and payouts for your account.</p>
+      </div>
+    </div>
+    <div class="overflow-x-auto rounded-2xl border border-white/10">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-white/5">
+          <tr class="text-xs muted uppercase tracking-wider">
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">Type</th>
+            <th class="px-4 py-3">Pick</th>
+            <th class="px-4 py-3">Amount</th>
+            <th class="px-4 py-3">Won</th>
+            <th class="px-4 py-3">Open</th>
+            <th class="px-4 py-3">Close</th>
+            <th class="px-4 py-3">Jodi</th>
+            <th class="px-4 py-3">Time</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          {% if bets %}
+            {% for b in bets %}
+            <tr class="border-t border-white/10">
+              <td class="px-4 py-3">{{ b.id }}</td>
+              <td class="px-4 py-3 capitalize">{{ b.type }}</td>
+              <td class="px-4 py-3 font-mono">{{ b.pick }}</td>
+              <td class="px-4 py-3">{{ b.amount }}</td>
+              <td class="px-4 py-3 {% if b.won > 0 %}text-emerald-400 font-bold{% else %}muted{% endif %}">{{ b.won }}</td>
+              <td class="px-4 py-3">{{ b.open_digit }}</td>
+              <td class="px-4 py-3">{{ b.close_digit }}</td>
+              <td class="px-4 py-3 font-mono">{{ b.jodi }}</td>
+              <td class="px-4 py-3 muted">{{ b.time }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="9" class="px-4 py-8 text-center muted">No bets yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    const currentDrawId = {{ draw.id }};
+const currentDrawId = {{ draw.id }};
+const drawHashed    = "{{ hashed }}";
+const drawNonce     = {{ nonce }};
+let selectedNums    = [];
 
-    async function placeBet() {
-        const betType = document.getElementById('betType').value;
-        const amount = parseInt(document.getElementById('betAmount').value);
-        const pick = document.getElementById('betPick').value.trim();
-        const message = document.getElementById('betMessage');
+// ── Number Picker ──────────────────────────────────────────────────────────
+function toggleNum(btn) {
+  const n = parseInt(btn.dataset.num);
+  if (btn.classList.contains('selected')) {
+    btn.classList.remove('selected');
+    selectedNums = selectedNums.filter(x => x !== n);
+  } else {
+    if (selectedNums.length >= 3) {
+      alert('You can pick at most 3 numbers.');
+      return;
+    }
+    btn.classList.add('selected');
+    selectedNums.push(n);
+  }
+  selectedNums.sort((a,b) => a-b);
+  updatePickDisplay();
+}
 
-        message.innerHTML = '';
+function updatePickDisplay() {
+  const betType = document.getElementById('betType').value;
+  const pickedSpan = document.getElementById('pickedNums');
+  const resultSpan = document.getElementById('pickedResult');
+  const pickInput  = document.getElementById('betPick');
 
-        if (!pick) {
-            message.innerHTML = '<div class="text-red-300">Please enter your pick.</div>';
-            return;
-        }
+  if (selectedNums.length === 0) {
+    pickedSpan.textContent = 'none';
+    resultSpan.textContent = '—';
+    pickInput.value = '';
+    return;
+  }
 
-        try {
-            const res = await fetch('/api/bet', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    draw_id: currentDrawId,
-                    bet_type: betType,
-                    amount: amount,
-                    pick: pick
-                })
-            });
+  pickedSpan.textContent = selectedNums.join(', ');
+  const resultDigit = selectedNums.reduce((a,b) => a+b, 0) % 10;
+  resultSpan.textContent = resultDigit;
 
-            const data = await res.json();
+  if (betType === 'jodi') {
+    // For jodi, user should select 2 digits directly (open result + close result)
+    pickInput.value = selectedNums.slice(0,2).join('');
+  } else {
+    pickInput.value = String(resultDigit);
+  }
+}
 
-            if (data.error) {
-                message.innerHTML = `<div class="text-red-300">${data.error}</div>`;
-            } else {
-                message.innerHTML = `<div class="text-emerald-300">Bet placed successfully. Bet ID: ${data.bet_id}. Remaining credits: ${data.remaining}</div>`;
-                loadHistory();
-                setTimeout(() => window.location.reload(), 800);
-            }
-        } catch (err) {
-            message.innerHTML = '<div class="text-red-300">Something went wrong while placing the bet.</div>';
-        }
+document.getElementById('betType').addEventListener('change', updatePickDisplay);
+
+// ── Place Bet ──────────────────────────────────────────────────────────────
+async function placeBet() {
+  const betType = document.getElementById('betType').value;
+  const amount  = parseInt(document.getElementById('betAmount').value);
+  const pick    = document.getElementById('betPick').value.trim();
+  const msg     = document.getElementById('betMessage');
+  msg.innerHTML = '';
+
+  if (!pick) {
+    msg.innerHTML = '<div class="text-red-300">Please select numbers to auto-fill your pick.</div>';
+    return;
+  }
+
+  try {
+    const res  = await fetch('/api/bet', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ draw_id: currentDrawId, bet_type: betType, amount, pick })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      msg.innerHTML = `<div class="text-red-300">${data.error}</div>`;
+    } else {
+      msg.innerHTML = `<div class="text-emerald-300">✅ Bet placed! ID #${data.bet_id} &nbsp;|&nbsp; Remaining: ${data.remaining} credits</div>`;
+      document.getElementById('liveCredits').textContent = data.remaining;
+      loadHistory();
+    }
+  } catch {
+    msg.innerHTML = '<div class="text-red-300">Something went wrong. Try again.</div>';
+  }
+}
+
+// ── Reveal Draw ────────────────────────────────────────────────────────────
+async function revealDraw() {
+  const pin = document.getElementById('drawPin').value.trim();
+  const btn = document.getElementById('revealBtn');
+
+  if (!pin) { alert('Please enter your PIN first.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '🔄 Opening cards...';
+
+  try {
+    const res  = await fetch('/api/reveal', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ hashed: drawHashed, pin, nonce: drawNonce })
+    });
+    const data = await res.json();
+
+    if (data.error) { alert(data.error); btn.disabled=false; btn.textContent='🔓 Reveal Cards'; return; }
+
+    const openPatti  = data.open_patti.split('-').map(Number);
+    const closePatti = data.close_patti.split('-').map(Number);
+
+    // Flip open cards one by one with 500ms gap
+    openPatti.forEach((digit, i) => {
+      setTimeout(() => {
+        document.getElementById(`openNum${i}`).textContent = digit;
+        document.getElementById(`openCard${i}`).classList.add('flipped', 'reveal-glow');
+      }, i * 500);
+    });
+
+    // Open digit appears after all 3 open cards
+    setTimeout(() => {
+      document.getElementById('openResult').textContent = data.open_digit;
+    }, 1800);
+
+    // Close cards start after open cards + 800ms
+    closePatti.forEach((digit, i) => {
+      setTimeout(() => {
+        document.getElementById(`closeNum${i}`).textContent = digit;
+        document.getElementById(`closeCard${i}`).classList.add('flipped', 'reveal-glow');
+      }, 2600 + i * 500);
+    });
+
+    // Close digit + jodi after all cards
+    setTimeout(() => {
+      document.getElementById('closeResult').textContent = data.close_digit;
+      document.getElementById('jodiResult').textContent = data.jodi;
+      document.getElementById('jodiRevealRow').classList.remove('hidden');
+      document.getElementById('revealedSeed').textContent = data.seed;
+      document.getElementById('seedRow').classList.remove('hidden');
+      loadHistory();
+    }, 4200);
+
+    // Hold 5 seconds then re-enable
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '🔓 Reveal Again';
+    }, 9200);
+
+  } catch {
+    alert('Reveal failed. Try again.');
+    btn.disabled = false;
+    btn.textContent = '🔓 Reveal Cards';
+  }
+}
+
+// ── Load History ───────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const res  = await fetch('/api/history');
+    const bets = await res.json();
+    const tbody = document.getElementById('historyBody');
+
+    if (!Array.isArray(bets) || bets.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="px-4 py-8 text-center muted">No bets yet.</td></tr>';
+      return;
     }
 
-    async function revealDraw() {
-        const pin = document.getElementById('drawPin').value.trim();
-        if (!pin) {
-            alert('Please enter PIN first.');
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/reveal', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    hashed: "{{ hashed }}",
-                    pin: pin,
-                    nonce: {{ nonce }}
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-
-            document.getElementById('drawResult').classList.remove('hidden');
-            document.getElementById('resultOpen').textContent = data.open;
-            document.getElementById('resultJodi').textContent = data.jodi;
-            document.getElementById('resultSeed').textContent = data.seed;
-
-            loadHistory();
-            setTimeout(() => window.location.reload(), 1200);
-        } catch (err) {
-            alert('Failed to reveal draw.');
-        }
-    }
-
-    async function loadHistory() {
-        try {
-            const res = await fetch('/api/history');
-            const bets = await res.json();
-            const tbody = document.getElementById('historyBody');
-
-            if (!Array.isArray(bets) || bets.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-muted">No bets yet.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = bets.map(b => `
-                <tr class="border-t border-white/10">
-                    <td class="px-4 py-3">${b.id}</td>
-                    <td class="px-4 py-3">${b.type}</td>
-                    <td class="px-4 py-3">${b.pick}</td>
-                    <td class="px-4 py-3">${b.amount}</td>
-                    <td class="px-4 py-3">${b.won}</td>
-                    <td class="px-4 py-3">${b.result}/${b.jodi}</td>
-                    <td class="px-4 py-3">${b.time}</td>
-                </tr>
-            `).join('');
-        } catch (err) {
-            console.log('History load failed');
-        }
-    }
+    tbody.innerHTML = bets.map(b => `
+      <tr class="border-t border-white/10">
+        <td class="px-4 py-3">${b.id}</td>
+        <td class="px-4 py-3 capitalize">${b.type}</td>
+        <td class="px-4 py-3 font-mono">${b.pick}</td>
+        <td class="px-4 py-3">${b.amount}</td>
+        <td class="px-4 py-3 ${b.won > 0 ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${b.won}</td>
+        <td class="px-4 py-3">${b.open_digit}</td>
+        <td class="px-4 py-3">${b.close_digit}</td>
+        <td class="px-4 py-3 font-mono">${b.jodi}</td>
+        <td class="px-4 py-3 text-slate-400">${b.time}</td>
+      </tr>`).join('');
+  } catch { console.log('History load failed'); }
+}
 </script>
 {% endblock %}

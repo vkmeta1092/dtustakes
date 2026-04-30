@@ -12,7 +12,6 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     credits = db.Column(db.Integer, default=100, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     bets = db.relationship('Bet', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
@@ -27,10 +26,12 @@ class Draw(db.Model):
     server_seed = db.Column(db.String(64), nullable=False)
     hashed_server_seed = db.Column(db.String(64), nullable=False, index=True)
     nonce = db.Column(db.Integer, default=0, nullable=False)
+    open_patti = db.Column(db.String(10), nullable=True)
+    close_patti = db.Column(db.String(10), nullable=True)
     open_digit = db.Column(db.Integer, nullable=True)
-    jodi = db.Column(db.String(10), nullable=True)
+    close_digit = db.Column(db.Integer, nullable=True)
+    jodi = db.Column(db.String(4), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
     bets = db.relationship('Bet', backref='draw', lazy=True, cascade='all, delete-orphan')
 
 
@@ -39,7 +40,7 @@ class Bet(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     draw_id = db.Column(db.Integer, db.ForeignKey('draw.id'), nullable=False)
     bet_type = db.Column(db.String(20), nullable=False)
-    pick = db.Column(db.String(20), nullable=False)
+    pick = db.Column(db.String(10), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
     won = db.Column(db.Integer, default=0, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)

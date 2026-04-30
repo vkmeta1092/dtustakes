@@ -11,27 +11,32 @@ def generate_draw():
     return server_seed, hashed, nonce
 
 
-def compute_digit(server_seed, pin, nonce):
-    message = f"{pin}:{nonce}".encode()
-    digest = hmac.new(server_seed.encode(), message, hashlib.sha256).hexdigest()
-    return int(digest[:8], 16) % 10
+def _compute_patti(server_seed, salt, nonce):
+    digits = []
+    for i in range(3):
+        msg = f"{salt}:{nonce}:{i}".encode()
+        digest = hmac.new(server_seed.encode(), msg, hashlib.sha256).hexdigest()
+        digits.append(int(digest[:8], 16) % 10)
+    return digits
 
 
 def finalize_draw(hashed_server, pin, nonce):
     draw = Draw.query.filter_by(hashed_server_seed=hashed_server).first()
-
     if not draw:
         return None
 
-    if draw.open_digit is not None and draw.jodi is not None:
+    if draw.open_digit is not None and draw.close_digit is not None:
         return draw
 
-    digit1 = compute_digit(draw.server_seed, pin, nonce)
-    digit2 = compute_digit(draw.server_seed, str(int(pin) + 1), nonce)
+    open_digits  = _compute_patti(draw.server_seed, pin, nonce)
+    close_digits = _compute_patti(draw.server_seed, str(int(pin) + 1), nonce)
 
-    draw.open_digit = digit1
-    draw.jodi = f"{digit1}-{digit2}"
-    draw.nonce = nonce
+    draw.open_patti  = "-".join(map(str, open_digits))
+    draw.close_patti = "-".join(map(str, close_digits))
+    draw.open_digit  = sum(open_digits) % 10
+    draw.close_digit = sum(close_digits) % 10
+    draw.jodi        = f"{draw.open_digit}{draw.close_digit}"
+    draw.nonce       = nonce
 
     db.session.commit()
     return draw
